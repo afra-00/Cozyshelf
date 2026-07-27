@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cozyshelf</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background-color: #C4A484; font-family: 'Segoe UI', sans-serif; padding: 20px; }
+    .app { max-width: 500px; margin: 0 auto; background-color: #D2B48C; padding: 20px; border-radius: 20px; }
+    header { display: flex; align-items: center; gap: 15px; background-color: #C4A484; padding: 15px; border-radius: 15px; margin-bottom: 20px; }
+    .icon-bg { background-color: #F5DEB3; width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; }
+    h1 { color: #6B3A2A; font-size: 24px; }
+    .subtitle {
+      font-family: 'Georgia', 'Times New Roman', serif;
+      font-style: italic;
+      color: #6B3A2A;
+      font-size: 14px;
+      text-align: center;
+      padding: 10px 15px;
+      background-color: #F5DEB3;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      line-height: 1.6;
+      letter-spacing: 0.3px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+    .subtitle span { display: inline-block; }
+    .upload-btn { background-color: #6B3A2A; color: #F5DEB3; padding: 12px 30px; border-radius: 25px; display: inline-block; cursor: pointer; }
+    .book-card { background-color: #F5DEB3; padding: 15px; border-radius: 15px; margin-top: 15px; border-right: 5px solid #6B3A2A; }
+    .book-info h3 { color: #6B3A2A; font-size: 16px; }
+    .progress-bar { width: 100%; height: 12px; background-color: #D2B48C; border-radius: 10px; overflow: hidden; margin: 8px 0; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, #6B3A2A, #D2691E); border-radius: 10px; transition: width 0.3s; }
+    .page-control { display: flex; gap: 10px; margin-top: 10px; align-items: center; flex-wrap: wrap; }
+    .page-control input { width: 70px; padding: 6px; border: 2px solid #C4A484; border-radius: 10px; background-color: #FFF8DC; }
+    .page-control button { background-color: #6B3A2A; color: #F5DEB3; border: none; padding: 6px 15px; border-radius: 10px; cursor: pointer; }
+    .read-btn { background-color: #D2691E; color: white; border: none; padding: 6px 15px; border-radius: 10px; cursor: pointer; }
+    .remove-btn { background-color: #8B0000; color: white; border: none; padding: 6px 15px; border-radius: 10px; cursor: pointer; }
+    .edit-btn { background-color: #2E8B57; color: white; border: none; padding: 6px 15px; border-radius: 10px; cursor: pointer; }
+    .empty { text-align: center; color: #8B5A2B; padding: 40px 0; }
+    .book-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+    .edit-input { display: none; margin-top: 8px; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .edit-input input { padding: 6px; border: 2px solid #C4A484; border-radius: 10px; background-color: #FFF8DC; flex: 1; min-width: 120px; }
+    .edit-input button { background-color: #2E8B57; color: white; border: none; padding: 6px 15px; border-radius: 10px; cursor: pointer; }
+    .edit-input .cancel-btn { background-color: #8B5A2B; color: white; border: none; padding: 6px 15px; border-radius: 10px; cursor: pointer; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="icon-bg">🐾</div>
+    <h1>Cozyshelf</h1>
+  </header>
+
+  <!-- متن جدید بالا -->
+  <div class="subtitle">
+    <span>Every book carries a different world within it.</span><br />
+    <span>Experience different worlds. 📜🪶</span>
+  </div>
+
+  <div style="text-align:center; margin-bottom:20px;">
+    <label class="upload-btn" id="uploadBtn">♡ Put your book here ♡</label>
+    <input type="file" id="fileInput" accept=".pdf" style="display:none;">
+  </div>
+
+  <div id="booksList">
+    <p class="empty">No books yet :(</p>
+  </div>
+</div>
+
+<script>
+  let books = [];
+  let currentPage = {};
+
+  function saveData() {
+    localStorage.setItem('books', JSON.stringify(books));
+    localStorage.setItem('pages', JSON.stringify(currentPage));
+  }
+
+  function loadData() {
+    const savedBooks = localStorage.getItem('books');
+    const savedPages = localStorage.getItem('pages');
+    if (savedBooks) books = JSON.parse(savedBooks);
+    if (savedPages) currentPage = JSON.parse(savedPages);
+  }
+
+  function getProgress(bookId) {
+    const total = books.find(b => b.id === bookId)?.totalPages || 1;
+    const current = currentPage[bookId] || 0;
+    return Math.round((current / total) * 100);
+  }
+
+  function readPDF(bookId) {
+    const book = books.find(b => b.id === bookId);
+    if (!book || !book.fileData) {
+      alert('PDF file not found! Please upload again.');
+      return;
+    }
+
+    const byteString = atob(book.fileData.split(',')[1]);
+    const mimeString = book.fileData.split(',')[0].split(':')[1].split(';')[0];
+    const ab = new ArrayBuffer(byteString.length);
+    const ia = new Uint8Array(ab);
+    for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
+    }
+    const blob = new Blob([ab], { type: mimeString });
+    const url = URL.createObjectURL(blob);
+
+    window.open(url, '_blank');
+  }
+
+  function removeBook(bookId) {
+    if (confirm('Are you sure you want to remove this book?')) {
+      books = books.filter(b => b.id !== bookId);
+      delete currentPage[bookId];
+      saveData();
+      renderBooks();
+    }
+  }
+
+  function toggleEdit(bookId) {
+    const editDiv = document.getElementById(`edit_${bookId}`);
+    if (editDiv.style.display === 'flex') {
+      editDiv.style.display = 'none';
+    } else {
+      editDiv.style.display = 'flex';
+      const input = document.getElementById(`edit_input_${bookId}`);
+      const book = books.find(b => b.id === bookId);
+      if (book) input.value = book.name;
+      input.focus();
+    }
+  }
+
+  function saveEditName(bookId) {
+    const input = document.getElementById(`edit_input_${bookId}`);
+    const newName = input.value.trim();
+    if (newName === '') {
+      alert('Name cannot be empty!');
+      return;
+    }
+    const book = books.find(b => b.id === bookId);
+    if (book) {
+      book.name = newName;
+      saveData();
+      renderBooks();
+    }
+  }
+
+  function renderBooks() {
+    const list = document.getElementById('booksList');
+    if (books.length === 0) {
+      list.innerHTML = '<p class="empty">No books yet :(</p>';
+      return;
+    }
+    list.innerHTML = books.map(book => `
+      <div class="book-card">
+        <div class="book-info">
+          <h3>${book.name}</h3>
+          <p>Page ${currentPage[book.id] || 0} of ${book.totalPages}</p>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: ${getProgress(book.id)}%"></div>
+          </div>
+          <p>${getProgress(book.id)}%</p>
+        </div>
+        <div class="page-control">
+          <input type="number" id="page_${book.id}" value="${currentPage[book.id] || 0}" min="0" max="${book.totalPages}" />
+          <span>Page</span>
+          <button onclick="updatePage(${book.id})">Done</button>
+        </div>
+        <div class="book-actions">
+          <button class="read-btn" onclick="readPDF(${book.id})">📖 Read</button>
+          <button class="edit-btn" onclick="toggleEdit(${book.id})">✏️ Edit</button>
+          <button class="remove-btn" onclick="removeBook(${book.id})">🗑️ Remove</button>
+        </div>
+        <div class="edit-input" id="edit_${book.id}">
+          <input type="text" id="edit_input_${book.id}" value="${book.name}" />
+          <button onclick="saveEditName(${book.id})">Save</button>
+          <button class="cancel-btn" onclick="toggleEdit(${book.id})">Cancel</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function updatePage(bookId) {
+    const input = document.getElementById(`page_${bookId}`);
+    const page = Number(input.value);
+    const total = books.find(b => b.id === bookId)?.totalPages || 1;
+    if (page >= 0 && page <= total) {
+      currentPage[bookId] = page;
+      saveData();
+      renderBooks();
+    }
+  }
+
+  document.getElementById('fileInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file && file.type === 'application/pdf') {
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const newBook = {
+          id: Date.now(),
+          name: file.name.replace('.pdf', ''),
+          totalPages: Math.floor(Math.random() * 300) + 100,
+          fileData: event.target.result
+        };
+        books.push(newBook);
+        currentPage[newBook.id] = 0;
+        saveData();
+        renderBooks();
+        alert(' Book uploaded! Now tap the Read button.');
+      };
+      reader.readAsDataURL(file);
+      this.value = '';
+    } else {
+      alert('Please select a PDF file only!');
+    }
+  });
+
+  document.getElementById('uploadBtn').addEventListener('click', function() {
+    document.getElementById('fileInput').click();
+  });
+
+  loadData();
+  renderBooks();
+</script>
+</body>
+</html>

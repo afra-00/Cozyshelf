@@ -187,25 +187,53 @@
     }
   }
 
-  // ====== Open PDF ======
-  function openPDF(bookId) {
-    const book = books.find(b => b.id === bookId);
-    if (!book) { alert('Book not found!'); return; }
-    
-    if (book.fileData) {
-      const modal = document.getElementById('pdfModal');
-      const iframe = document.getElementById('pdfIframe');
-      const nameDisplay = document.getElementById('pdfName');
-      nameDisplay.textContent = `📄 ${book.name}.pdf`;
-      iframe.src = book.fileData;
-      modal.classList.add('active');
-      document.body.style.overflow = 'hidden';
-    } else {
-      alert('⚠️ PDF file not in memory. Please upload again.');
-      // دکمه آپلود رو فعال کن
-      document.getElementById('fileInput').click();
+ // ====== Open PDF ======
+function openPDF(bookId) {
+  const book = books.find(b => b.id === bookId);
+  if (!book) { 
+    alert('کتاب پیدا نشد!'); 
+    return; 
+  }
+  
+  // اگر فایل در حافظه هست، نشون بده
+  if (book.fileData) {
+    const modal = document.getElementById('pdfModal');
+    const iframe = document.getElementById('pdfIframe');
+    const nameDisplay = document.getElementById('pdfName');
+    nameDisplay.textContent = `📄 ${book.name}.pdf`;
+    iframe.src = book.fileData;
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  } 
+  // اگر فایل در حافظه نیست، از کاربر بخواه دوباره آپلود کنه
+  else {
+    const userConfirm = confirm('📚 فایل PDF در حافظه نیست. می‌خوای الان دوباره آپلودش کنی؟');
+    if (userConfirm) {
+      // یک input مخفی برای آپلود مجدد ایجاد کن
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.pdf';
+      input.onchange = function(e) {
+        const file = e.target.files[0];
+        if (file && file.type === 'application/pdf') {
+          const reader = new FileReader();
+          reader.onload = function(event) {
+            book.fileData = event.target.result;
+            saveData(); // ذخیره در localStorage
+            renderBooks();
+            alert('✅ فایل دوباره آپلود شد! حالا روی دکمه Read دوباره بزن.');
+            // به‌صورت خودکار دوباره بازش کن
+            openPDF(bookId);
+          };
+          reader.readAsDataURL(file);
+        } else {
+          alert('❌ لطفاً یک فایل PDF معتبر انتخاب کن.');
+        }
+      };
+      input.click();
     }
   }
+}
 
   // ====== Close Modal ======
   document.getElementById('closePdfBtn').addEventListener('click', function() {

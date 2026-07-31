@@ -138,7 +138,7 @@
     t.textContent = msg;
     t.classList.add('show');
     clearTimeout(t._timeout);
-    t._timeout = setTimeout(() => t.classList.remove('show'), 2000);
+    t._timeout = setTimeout(() => t.classList.remove('show'), 3000);
   }
 
   function saveData() {
@@ -220,7 +220,7 @@
     }
   }
 
-  // ====== باز کردن PDF با OBJECT ======
+  // ====== باز کردن PDF با OBJECT و دانلود ======
   function openPDF(bookId) {
     const book = books.find(b => b.id === bookId);
     if (!book) { 
@@ -230,22 +230,55 @@
     
     // اگر فایل در حافظه هست
     if (book.fileData) {
-      const modal = document.getElementById('pdfModal');
-      const pdfObject = document.getElementById('pdfObject');
-      const nameDisplay = document.getElementById('pdfName');
-      const downloadLink = document.getElementById('downloadPdfLink');
-      
-      nameDisplay.textContent = `📄 ${book.name}.pdf`;
-      
-      // تنظیم object با data URL
-      pdfObject.setAttribute('data', book.fileData);
-      
-      // تنظیم لینک دانلود
-      downloadLink.href = book.fileData;
-      downloadLink.download = `${book.name}.pdf`;
-      
-      modal.classList.add('active');
-      document.body.style.overflow = 'hidden';
+      try {
+        // تبدیل data URL به Blob
+        const byteString = atob(book.fileData.split(',')[1]);
+        const mimeString = book.fileData.split(',')[0].split(':')[1].split(';')[0];
+        const ab = new ArrayBuffer(byteString.length);
+        const ia = new Uint8Array(ab);
+        for (let i = 0; i < byteString.length; i++) {
+          ia[i] = byteString.charCodeAt(i);
+        }
+        const blob = new Blob([ab], { type: mimeString });
+        
+        // ساخت URL موقت
+        const url = URL.createObjectURL(blob);
+        
+        // === روش ۱: باز کردن با برنامه‌های گوشی ===
+        // ایجاد لینک دانلود و باز کردن با برنامه پیش‌فرض
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${book.name}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // آزادسازی حافظه بعد از ۵ ثانیه
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+        
+        showToast('📂 فایل دانلود شد! از برنامه PDF Reader بازش کن.');
+        
+        // === روش ۲: باز کردن در تب جدید (پشتیبان) ===
+        // اگه روش بالا کار نکرد، این یکی امتحان میشه
+        setTimeout(() => {
+          const newWin = window.open('', '_blank');
+          if (newWin) {
+            newWin.document.write(`
+              <html><head><title>${book.name}</title></head>
+              <body style="margin:0;padding:0;">
+                <iframe src="${url}" style="width:100%;height:100%;border:none;"></iframe>
+                <p style="text-align:center;font-family:sans-serif;padding:20px;">
+                  اگر فایل نمایش داده نشد، <a href="${url}" download="${book.name}.pdf">اینجا کلیک کن</a> تا دانلود کنی.
+                </p>
+              </body></html>
+            `);
+            newWin.document.close();
+          }
+        }, 1000);
+        
+      } catch(e) {
+        alert('خطا در باز کردن فایل: ' + e.message);
+      }
     } else {
       // اگر فایل در حافظه نیست
       const userConfirm = confirm('📚 فایل PDF در حافظه نیست. می‌خوای الان دوباره آپلودش کنی؟');
@@ -262,7 +295,7 @@
               saveData();
               renderBooks();
               alert('✅ فایل دوباره آپلود شد!');
-              openPDF(bookId); // خودکار بازش کن
+              openPDF(bookId);
             };
             reader.readAsDataURL(file);
           } else {
@@ -279,7 +312,7 @@
     const modal = document.getElementById('pdfModal');
     const pdfObject = document.getElementById('pdfObject');
     modal.classList.remove('active');
-    pdfObject.setAttribute('data', ''); // پاک کردن data برای آزادسازی حافظه
+    pdfObject.setAttribute('data', '');
     document.body.style.overflow = 'auto';
   });
 

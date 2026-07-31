@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="en">
+<html lang="fa">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Cozyshelf</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -11,38 +11,39 @@
     header { display: flex; align-items: center; gap: 15px; background-color: #C4A484; padding: 15px; border-radius: 15px; margin-bottom: 20px; }
     .icon-bg { background-color: #F5DEB3; width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; }
     h1 { color: #6B3A2A; font-size: 24px; }
-    .subtitle {
-      font-family: 'Georgia', 'Times New Roman', serif;
-      font-style: italic;
-      color: #6B3A2A;
-      font-size: 14px;
-      text-align: center;
-      padding: 10px 15px;
-      background-color: #F5DEB3;
-      border-radius: 12px;
-      margin-bottom: 20px;
-      line-height: 1.6;
-      letter-spacing: 0.3px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-    }
-    .subtitle span { display: inline-block; }
-    .upload-btn { background-color: #6B3A2A; color: #F5DEB3; padding: 12px 30px; border-radius: 25px; display: inline-block; cursor: pointer; }
-    .book-card { background-color: #F5DEB3; padding: 15px; border-radius: 15px; margin-top: 15px; border-right: 5px solid #6B3A2A; }
-    .book-info h3 { color: #6B3A2A; font-size: 16px; }
+    .subtitle { font-family: 'Georgia', serif; font-style: italic; color: #6B3A2A; font-size: 14px; text-align: center; padding: 10px 15px; background-color: #F5DEB3; border-radius: 12px; margin-bottom: 20px; line-height: 1.6; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+    .upload-btn { background-color: #6B3A2A; color: #F5DEB3; padding: 14px 30px; border-radius: 25px; display: inline-block; cursor: pointer; font-size: 16px; border: none; transition: all 0.3s; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+    .upload-btn:active { transform: scale(0.95); }
+    .book-card { background-color: #F5DEB3; padding: 15px; border-radius: 15px; margin-top: 15px; border-right: 5px solid #6B3A2A; box-shadow: 0 2px 8px rgba(0,0,0,0.1); animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .book-info h3 { color: #6B3A2A; font-size: 16px; word-break: break-word; }
+    .book-info .meta { color: #8B5A2B; font-size: 13px; margin-top: 4px; }
     .progress-bar { width: 100%; height: 12px; background-color: #D2B48C; border-radius: 10px; overflow: hidden; margin: 8px 0; }
     .progress-fill { height: 100%; background: linear-gradient(90deg, #6B3A2A, #D2691E); border-radius: 10px; transition: width 0.3s; }
     .page-control { display: flex; gap: 10px; margin-top: 10px; align-items: center; flex-wrap: wrap; }
-    .page-control input { width: 70px; padding: 6px; border: 2px solid #C4A484; border-radius: 10px; background-color: #FFF8DC; }
-    .page-control button { background-color: #6B3A2A; color: #F5DEB3; border: none; padding: 6px 15px; border-radius: 10px; cursor: pointer; }
-    .read-btn { background-color: #D2691E; color: white; border: none; padding: 6px 15px; border-radius: 10px; cursor: pointer; }
-    .remove-btn { background-color: #8B0000; color: white; border: none; padding: 6px 15px; border-radius: 10px; cursor: pointer; }
-    .edit-btn { background-color: #2E8B57; color: white; border: none; padding: 6px 15px; border-radius: 10px; cursor: pointer; }
-    .empty { text-align: center; color: #8B5A2B; padding: 40px 0; }
+    .page-control input { width: 70px; padding: 6px; border: 2px solid #C4A484; border-radius: 10px; background-color: #FFF8DC; font-size: 14px; }
+    .page-control button, .book-actions button { border: none; padding: 6px 15px; border-radius: 10px; cursor: pointer; font-size: 13px; transition: all 0.2s; }
+    .page-control button:active, .book-actions button:active { transform: scale(0.95); }
+    .read-btn { background-color: #D2691E; color: white; }
+    .remove-btn { background-color: #8B0000; color: white; }
+    .edit-btn { background-color: #2E8B57; color: white; }
+    .done-btn { background-color: #6B3A2A; color: #F5DEB3; }
     .book-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
     .edit-input { display: none; margin-top: 8px; gap: 8px; align-items: center; flex-wrap: wrap; }
-    .edit-input input { padding: 6px; border: 2px solid #C4A484; border-radius: 10px; background-color: #FFF8DC; flex: 1; min-width: 120px; }
-    .edit-input button { background-color: #2E8B57; color: white; border: none; padding: 6px 15px; border-radius: 10px; cursor: pointer; }
-    .edit-input .cancel-btn { background-color: #8B5A2B; color: white; border: none; padding: 6px 15px; border-radius: 10px; cursor: pointer; }
+    .edit-input input { padding: 6px; border: 2px solid #C4A484; border-radius: 10px; background-color: #FFF8DC; flex: 1; min-width: 120px; font-size: 14px; }
+    .edit-input .save-edit { background-color: #2E8B57; color: white; border: none; padding: 6px 15px; border-radius: 10px; cursor: pointer; }
+    .edit-input .cancel-edit { background-color: #8B5A2B; color: white; border: none; padding: 6px 15px; border-radius: 10px; cursor: pointer; }
+    .empty { text-align: center; color: #8B5A2B; padding: 40px 0; font-size: 18px; }
+    .pdf-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 1000; padding: 10px; box-sizing: border-box; }
+    .pdf-modal.active { display: flex; flex-direction: column; }
+    .pdf-modal .close-btn { align-self: flex-end; background: #8B0000; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-size: 18px; cursor: pointer; margin-bottom: 10px; }
+    .pdf-modal iframe { width: 100%; flex: 1; border: none; background: white; border-radius: 10px; }
+    .pdf-modal .pdf-name { color: white; text-align: center; padding: 10px; font-size: 16px; }
+    #fileInput { display: none; }
+    .upload-area { display: flex; justify-content: center; margin-bottom: 20px; flex-direction: column; align-items: center; gap: 10px; }
+    .file-size-warning { font-size: 12px; color: #8B5A2B; opacity: 0.7; }
+    .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #6B3A2A; color: #F5DEB3; padding: 12px 24px; border-radius: 15px; font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); opacity: 0; transition: all 0.3s; z-index: 2000; pointer-events: none; }
+    .toast.show { opacity: 1; }
   </style>
 </head>
 <body>
@@ -52,73 +53,184 @@
     <h1>Cozyshelf</h1>
   </header>
 
-  <!-- متن جدید بالا -->
   <div class="subtitle">
     <span>Every book carries a different world within it.</span><br />
     <span>Experience different worlds. 📜🪶</span>
   </div>
 
-  <div style="text-align:center; margin-bottom:20px;">
-    <label class="upload-btn" id="uploadBtn">♡ Put your book here ♡</label>
-    <input type="file" id="fileInput" accept=".pdf" style="display:none;">
+  <div class="upload-area">
+    <button class="upload-btn" id="uploadBtn">♡ Put your book here ♡</button>
+    <input type="file" id="fileInput" accept=".pdf" />
+    <div class="file-size-warning">📁 PDF files up to 10MB</div>
   </div>
 
   <div id="booksList">
-    <p class="empty">No books yet :(</p>
+    <p class="empty">📚 No books yet :(</p>
   </div>
 </div>
 
+<!-- Modal PDF Viewer -->
+<div class="pdf-modal" id="pdfModal">
+  <button class="close-btn" id="closePdfBtn">✕ Close</button>
+  <div class="pdf-name" id="pdfName">Loading...</div>
+  <iframe id="pdfIframe" src=""></iframe>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
 <script>
+  // ====== SIMPLE LOCAL STORAGE VERSION ======
+  // این نسخه کاملاً روی گوشی کار میکنه، نیازی به سرور نداره
+  
   let books = [];
   let currentPage = {};
 
+  // ====== Toast ======
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._timeout);
+    t._timeout = setTimeout(() => t.classList.remove('show'), 2000);
+  }
+
+  // ====== Save/Load ======
   function saveData() {
-    localStorage.setItem('books', JSON.stringify(books));
-    localStorage.setItem('pages', JSON.stringify(currentPage));
+    try {
+      // فقط متادیتا رو ذخیره کن، فایل رو نه (چون حجمش زیاده)
+      const meta = books.map(b => ({
+        id: b.id,
+        name: b.name,
+        totalPages: b.totalPages,
+        // fileData رو ذخیره نکن
+      }));
+      localStorage.setItem('cozyshelf_books', JSON.stringify(meta));
+      localStorage.setItem('cozyshelf_pages', JSON.stringify(currentPage));
+    } catch(e) {
+      console.warn('Save error:', e);
+    }
   }
 
   function loadData() {
-    const savedBooks = localStorage.getItem('books');
-    const savedPages = localStorage.getItem('pages');
-    if (savedBooks) books = JSON.parse(savedBooks);
-    if (savedPages) currentPage = JSON.parse(savedPages);
+    try {
+      const saved = localStorage.getItem('cozyshelf_books');
+      const pages = localStorage.getItem('cozyshelf_pages');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        books = parsed.map(b => ({
+          ...b,
+          fileData: null // فایل رو جدا نگه می‌داریم
+        }));
+      }
+      if (pages) currentPage = JSON.parse(pages);
+    } catch(e) {
+      console.warn('Load error:', e);
+    }
   }
 
+  // ====== Render ======
+  function renderBooks() {
+    const list = document.getElementById('booksList');
+    if (books.length === 0) {
+      list.innerHTML = '<p class="empty">📚 No books yet :(</p>';
+      return;
+    }
+    list.innerHTML = books.map(book => `
+      <div class="book-card" data-id="${book.id}">
+        <div class="book-info">
+          <h3>📖 ${book.name}</h3>
+          <div class="meta">Page ${currentPage[book.id] || 0} of ${book.totalPages}</div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: ${getProgress(book.id)}%"></div>
+          </div>
+          <div class="meta">${getProgress(book.id)}% completed</div>
+        </div>
+        <div class="page-control">
+          <input type="number" id="page_${book.id}" value="${currentPage[book.id] || 0}" min="0" max="${book.totalPages}" />
+          <span>Page</span>
+          <button class="done-btn" onclick="updatePage('${book.id}')">Done</button>
+        </div>
+        <div class="book-actions">
+          <button class="read-btn" onclick="openPDF('${book.id}')">📖 Read</button>
+          <button class="edit-btn" onclick="toggleEdit('${book.id}')">✏️ Edit</button>
+          <button class="remove-btn" onclick="removeBook('${book.id}')">🗑️ Remove</button>
+        </div>
+        <div class="edit-input" id="edit_${book.id}">
+          <input type="text" id="edit_input_${book.id}" value="${book.name}" />
+          <button class="save-edit" onclick="saveEditName('${book.id}')">Save</button>
+          <button class="cancel-edit" onclick="toggleEdit('${book.id}')">Cancel</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ====== Progress ======
   function getProgress(bookId) {
     const total = books.find(b => b.id === bookId)?.totalPages || 1;
     const current = currentPage[bookId] || 0;
-    return Math.round((current / total) * 100);
+    return Math.min(100, Math.round((current / total) * 100));
   }
 
-  function readPDF(bookId) {
-    const book = books.find(b => b.id === bookId);
-    if (!book || !book.fileData) {
-      alert('PDF file not found! Please upload again.');
-      return;
-    }
-
-    const byteString = atob(book.fileData.split(',')[1]);
-    const mimeString = book.fileData.split(',')[0].split(':')[1].split(';')[0];
-    const ab = new ArrayBuffer(byteString.length);
-    const ia = new Uint8Array(ab);
-    for (let i = 0; i < byteString.length; i++) {
-      ia[i] = byteString.charCodeAt(i);
-    }
-    const blob = new Blob([ab], { type: mimeString });
-    const url = URL.createObjectURL(blob);
-
-    window.open(url, '_blank');
-  }
-
-  function removeBook(bookId) {
-    if (confirm('Are you sure you want to remove this book?')) {
-      books = books.filter(b => b.id !== bookId);
-      delete currentPage[bookId];
-      saveData();
+  // ====== Update Page ======
+  function updatePage(bookId) {
+    const input = document.getElementById(`page_${bookId}`);
+    const page = Number(input.value);
+    const total = books.find(b => b.id === bookId)?.totalPages || 1;
+    if (!isNaN(page) && page >= 0 && page <= total) {
+      currentPage[bookId] = page;
+      localStorage.setItem('cozyshelf_pages', JSON.stringify(currentPage));
       renderBooks();
+      showToast('✅ Page updated!');
+    } else {
+      alert(`Please enter a number between 0 and ${total}`);
     }
   }
 
+  // ====== Open PDF ======
+  function openPDF(bookId) {
+    const book = books.find(b => b.id === bookId);
+    if (!book) { alert('Book not found!'); return; }
+    
+    if (book.fileData) {
+      const modal = document.getElementById('pdfModal');
+      const iframe = document.getElementById('pdfIframe');
+      const nameDisplay = document.getElementById('pdfName');
+      nameDisplay.textContent = `📄 ${book.name}.pdf`;
+      iframe.src = book.fileData;
+      modal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    } else {
+      alert('⚠️ PDF file not in memory. Please upload again.');
+      // دکمه آپلود رو فعال کن
+      document.getElementById('fileInput').click();
+    }
+  }
+
+  // ====== Close Modal ======
+  document.getElementById('closePdfBtn').addEventListener('click', function() {
+    const modal = document.getElementById('pdfModal');
+    const iframe = document.getElementById('pdfIframe');
+    modal.classList.remove('active');
+    iframe.src = '';
+    document.body.style.overflow = 'auto';
+  });
+
+  document.getElementById('pdfModal').addEventListener('click', function(e) {
+    if (e.target === this) document.getElementById('closePdfBtn').click();
+  });
+
+  // ====== Remove Book ======
+  function removeBook(bookId) {
+    if (!confirm('Are you sure you want to remove this book?')) return;
+    books = books.filter(b => b.id !== bookId);
+    delete currentPage[bookId];
+    saveData();
+    renderBooks();
+    showToast('🗑️ Book removed');
+  }
+
+  // ====== Edit Name ======
   function toggleEdit(bookId) {
     const editDiv = document.getElementById(`edit_${bookId}`);
     if (editDiv.style.display === 'flex') {
@@ -126,101 +238,71 @@
     } else {
       editDiv.style.display = 'flex';
       const input = document.getElementById(`edit_input_${bookId}`);
-      const book = books.find(b => b.id === bookId);
-      if (book) input.value = book.name;
       input.focus();
+      input.select();
     }
   }
 
   function saveEditName(bookId) {
     const input = document.getElementById(`edit_input_${bookId}`);
     const newName = input.value.trim();
-    if (newName === '') {
-      alert('Name cannot be empty!');
-      return;
-    }
+    if (newName === '') { alert('Name cannot be empty!'); return; }
     const book = books.find(b => b.id === bookId);
     if (book) {
       book.name = newName;
       saveData();
       renderBooks();
+      showToast('✏️ Name updated!');
     }
   }
 
-  function renderBooks() {
-    const list = document.getElementById('booksList');
-    if (books.length === 0) {
-      list.innerHTML = '<p class="empty">No books yet :(</p>';
-      return;
-    }
-    list.innerHTML = books.map(book => `
-      <div class="book-card">
-        <div class="book-info">
-          <h3>${book.name}</h3>
-          <p>Page ${currentPage[book.id] || 0} of ${book.totalPages}</p>
-          <div class="progress-bar">
-            <div class="progress-fill" style="width: ${getProgress(book.id)}%"></div>
-          </div>
-          <p>${getProgress(book.id)}%</p>
-        </div>
-        <div class="page-control">
-          <input type="number" id="page_${book.id}" value="${currentPage[book.id] || 0}" min="0" max="${book.totalPages}" />
-          <span>Page</span>
-          <button onclick="updatePage(${book.id})">Done</button>
-        </div>
-        <div class="book-actions">
-          <button class="read-btn" onclick="readPDF(${book.id})">📖 Read</button>
-          <button class="edit-btn" onclick="toggleEdit(${book.id})">✏️ Edit</button>
-          <button class="remove-btn" onclick="removeBook(${book.id})">🗑️ Remove</button>
-        </div>
-        <div class="edit-input" id="edit_${book.id}">
-          <input type="text" id="edit_input_${book.id}" value="${book.name}" />
-          <button onclick="saveEditName(${book.id})">Save</button>
-          <button class="cancel-btn" onclick="toggleEdit(${book.id})">Cancel</button>
-        </div>
-      </div>
-    `).join('');
-  }
-
-  function updatePage(bookId) {
-    const input = document.getElementById(`page_${bookId}`);
-    const page = Number(input.value);
-    const total = books.find(b => b.id === bookId)?.totalPages || 1;
-    if (page >= 0 && page <= total) {
-      currentPage[bookId] = page;
-      saveData();
-      renderBooks();
-    }
-  }
-
+  // ====== Upload PDF ======
   document.getElementById('fileInput').addEventListener('change', function(e) {
     const file = e.target.files[0];
-    if (file && file.type === 'application/pdf') {
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert('⚠️ File is too large! Maximum size is 10MB.');
+      this.value = '';
+      return;
+    }
+
+    if (file.type === 'application/pdf') {
       const reader = new FileReader();
       reader.onload = function(event) {
-        const newBook = {
-          id: Date.now(),
-          name: file.name.replace('.pdf', ''),
-          totalPages: Math.floor(Math.random() * 300) + 100,
-          fileData: event.target.result
-        };
-        books.push(newBook);
-        currentPage[newBook.id] = 0;
-        saveData();
-        renderBooks();
-        alert(' Book uploaded! Now tap the Read button.');
+        try {
+          const newBook = {
+            id: Date.now().toString(),
+            name: file.name.replace('.pdf', '').replace(/\.[^.]+$/, ''),
+            totalPages: Math.floor(Math.random() * 300) + 100,
+            fileData: event.target.result
+          };
+          books.push(newBook);
+          currentPage[newBook.id] = 0;
+          saveData();
+          renderBooks();
+          showToast('✅ Book uploaded! Tap Read to view.');
+        } catch(err) {
+          alert('Error: ' + err.message);
+        }
+      };
+      reader.onerror = function() {
+        alert('Error reading file. Please try again.');
       };
       reader.readAsDataURL(file);
       this.value = '';
     } else {
-      alert('Please select a PDF file only!');
+      alert('❌ Please select a PDF file only!');
+      this.value = '';
     }
   });
 
+  // ====== Click Upload Button ======
   document.getElementById('uploadBtn').addEventListener('click', function() {
     document.getElementById('fileInput').click();
   });
 
+  // ====== Init ======
   loadData();
   renderBooks();
 </script>

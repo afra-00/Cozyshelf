@@ -592,7 +592,59 @@
   });
 
   // ============================================================
-  //  Init
+ // ============================================================
+//  Upload PDF (اصلاح شده)
+// ============================================================
+document.getElementById('fileInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+        alert('⚠️ File is too large! Maximum size is 10MB.');
+        this.value = '';
+        return;
+    }
+
+    if (file.type === 'application/pdf') {
+        const reader = new FileReader();
+        reader.onload = async function(event) {
+            try {
+                const newBook = {
+                    id: Date.now().toString() + '_' + Math.random().toString(36).substr(2, 4),
+                    name: file.name.replace('.pdf', '').replace(/\.[^.]+$/, ''),
+                    totalPages: Math.floor(Math.random() * 300) + 100,
+                    fileData: event.target.result,
+                    coverData: null
+                };
+                books.push(newBook);
+                currentPage[newBook.id] = 0;
+                await saveBook(newBook);
+                localStorage.setItem('cozyshelf_pages', JSON.stringify(currentPage));
+                renderBooks();
+                showToast('✅ Book uploaded! Tap Read to view.');
+            } catch(err) {
+                alert('Error: ' + err.message);
+            }
+        };
+        reader.onerror = function() {
+            alert('Error reading file. Please try again.');
+        };
+        reader.readAsDataURL(file);
+        this.value = '';
+    } else {
+        alert('❌ Please select a PDF file only!');
+        this.value = '';
+    }
+});
+
+document.getElementById('uploadBtn').addEventListener('click', function() {
+    const fileInput = document.getElementById('fileInput');
+    if (fileInput) {
+        fileInput.click();
+    } else {
+        alert('خطا: ورودی فایل پیدا نشد!');
+    }
+}); //  Init
   // ============================================================
   async function init() {
     try {

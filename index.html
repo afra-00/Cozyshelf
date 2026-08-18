@@ -280,7 +280,43 @@ function changeCover(bookId) {
   document.getElementById('coverInput').click();
 }
 
-// ========== Open PDF (همون کد خودت) ==========
+// ========== Open PDF (Read بدون دانلود) ==========
+function openPDF(bookId) {
+  const book = books.find(b => b.id === bookId);
+  if (!book) { alert('کتاب پیدا نشد!'); return; }
+  if (!book.fileData) {
+    const userConfirm = confirm('📚 فایل PDF در حافظه نیست. می‌خوای الان دوباره آپلودش کنی؟');
+    if (userConfirm) {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.pdf';
+      input.onchange = async function(e) {
+        const file = e.target.files[0];
+        if (file && file.type === 'application/pdf') {
+          const reader = new FileReader();
+          reader.onload = async function(event) {
+            book.fileData = event.target.result;
+            await saveBook(book);
+            renderBooks();
+            alert('✅ فایل دوباره آپلود شد!');
+            openPDF(bookId);
+          };
+          reader.readAsDataURL(file);
+        } else {
+          alert('❌ لطفاً یک فایل PDF معتبر انتخاب کن.');
+        }
+      };
+      input.click();
+    }
+    return;
+  }
+
+  pendingBookId = bookId;
+  document.getElementById('appSelectorModal').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+// ========== handleAppSelection (اصلاح شده) ==========
 function handleAppSelection(appType) {
   const modal = document.getElementById('appSelectorModal');
   modal.classList.remove('active');
@@ -319,15 +355,17 @@ function handleAppSelection(appType) {
                 background: rgba(0,0,0,0.8); color: white;
                 padding: 12px; text-align: center; font-family: sans-serif;
                 display: flex; justify-content: center; gap: 20px;
+                flex-wrap: wrap;
               }
               .toolbar a { color: #F5DEB3; text-decoration: none; padding: 6px 18px; background: #6B3A2A; border-radius: 8px; }
+              .toolbar span { display: flex; align-items: center; }
             </style>
             </head>
             <body>
               <iframe src="${url}"></iframe>
               <div class="toolbar">
                 <span>📖 ${book.name}</span>
-                <a href="${url}" download="${book.name}.pdf">📥 دانلود</a>
+                <a href="${url}" download="${book.name}.pdf">📥 دانلود فایل</a>
               </div>
             </body></html>
           `);
@@ -379,8 +417,39 @@ function handleAppSelection(appType) {
   }
 }
 
+// ========== Remove & Edit ==========
+async function removeBook(bookId) {
+  if (!confirm('Are you sure you want to remove this book?')) return;
+  await deleteBook(bookId);
+  books = books.filter(b => b.id !== bookId);
+  delete currentPage[bookId];
+  localStorage.setItem('cozyshelf_pages', JSON.stringify(currentPage));
+  renderBooks();
+  showToast('🗑️ Book removed');
+}
 
-// ========== Upload events (دقیقاً مثل کد خودت) ==========
+function toggleEdit(bookId) {
+  const editDiv = document.getElementById(`edit_${bookId}`);
+  editDiv.style.display = editDiv.style.display === 'flex' ? 'none' : 'flex';
+  if (editDiv.style.display === 'flex') {
+    document.getElementById(`edit_input_${bookId}`).focus();
+  }
+}
+
+async function saveEditName(bookId) {
+  const input = document.getElementById(`edit_input_${bookId}`);
+  const newName = input.value.trim();
+  if (newName === '') { alert('Name cannot be empty!'); return; }
+  const book = books.find(b => b.id === bookId);
+  if (book) {
+    book.name = newName;
+    await saveBook(book);
+    renderBooks();
+    showToast('✏️ Name updated!');
+  }
+}
+
+// ========== Upload events ==========
 document.getElementById('fileInput').addEventListener('change', function(e) {
   const file = e.target.files[0];
   if (!file) return;

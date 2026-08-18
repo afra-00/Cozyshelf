@@ -38,64 +38,6 @@
     .edit-input .save-edit { background-color: #2E8B57; color: white; border: none; padding: 6px 15px; border-radius: 10px; cursor: pointer; }
     .edit-input .cancel-edit { background-color: #8B5A2B; color: white; border: none; padding: 6px 15px; border-radius: 10px; cursor: pointer; }
     .empty { text-align: center; color: #8B5A2B; padding: 40px 0; font-size: 18px; }
-    
-    .app-selector-modal {
-      display: none;
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.7);
-      z-index: 1500;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-    }
-    .app-selector-modal.active { display: flex; }
-    .app-selector-box {
-      background: #F5DEB3;
-      border-radius: 20px;
-      padding: 25px;
-      max-width: 400px;
-      width: 100%;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-    }
-    .app-selector-box h3 {
-      color: #6B3A2A;
-      text-align: center;
-      margin-bottom: 20px;
-      font-size: 18px;
-    }
-    .app-selector-box .app-option {
-      display: block;
-      width: 100%;
-      padding: 14px;
-      margin: 8px 0;
-      border: 2px solid #C4A484;
-      border-radius: 15px;
-      background: #FFF8DC;
-      font-size: 16px;
-      color: #6B3A2A;
-      cursor: pointer;
-      transition: all 0.2s;
-      text-align: center;
-    }
-    .app-selector-box .app-option:active {
-      transform: scale(0.95);
-      background: #D2B48C;
-    }
-    .app-selector-box .app-option .icon { margin-right: 10px; }
-    .app-selector-box .close-selector {
-      display: block;
-      width: 100%;
-      padding: 12px;
-      margin-top: 12px;
-      border: none;
-      border-radius: 15px;
-      background: #8B0000;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-    }
     #fileInput { display: none; }
     #coverInput { display: none; }
     .upload-area { display: flex; justify-content: center; margin-bottom: 20px; flex-direction: column; align-items: center; gap: 10px; }
@@ -140,30 +82,6 @@
 
   <div id="booksList">
     <p class="empty">📚 No books yet :(</p>
-  </div>
-</div>
-
-<!-- ====== مودال جدید برای انتخاب برنامه‌های خواندن ====== -->
-<div class="app-selector-modal" id="appSelectorModal">
-  <div class="app-selector-box">
-    <h3>📂 انتخاب برنامه برای باز کردن PDF</h3>
-    
-    <!-- گزینه ۱: اشتراک‌گذاری (بهترین روش در اندروید) -->
-    <button class="app-option" id="shareOption">
-      <span class="icon">📤</span> انتخاب برنامه (اشتراک‌گذاری)
-    </button>
-    
-    <!-- گزینه ۲: باز کردن در مرورگر -->
-    <button class="app-option" id="browserOption">
-      <span class="icon">🌐</span> مرورگر (کروم/فایرفاکس)
-    </button>
-    
-    <!-- گزینه ۳: دانلود -->
-    <button class="app-option" id="downloadOption">
-      <span class="icon">📥</span> ذخیره در گوشی (دانلود)
-    </button>
-    
-    <button class="close-selector" id="closeSelectorBtn">✕ انصراف</button>
   </div>
 </div>
 
@@ -218,7 +136,6 @@ function deleteBook(id) {
 // ========== State ==========
 let books = [];
 let currentPage = {};
-let pendingBook = null; // کتابی که قراره باز بشه
 let coverInputTarget = null;
 
 function showToast(msg) {
@@ -293,8 +210,8 @@ function changeCover(bookId) {
   document.getElementById('coverInput').click();
 }
 
-// ========== تبدیل فایل به URL ==========
-function getFileUrl(book) {
+// ========== تبدیل فایل به Blob ==========
+function getFileBlob(book) {
   const byteString = atob(book.fileData.split(',')[1]);
   const mimeString = book.fileData.split(',')[0].split(':')[1].split(';')[0];
   const ab = new ArrayBuffer(byteString.length);
@@ -303,7 +220,7 @@ function getFileUrl(book) {
   return new Blob([ab], { type: mimeString });
 }
 
-// ========== Open PDF - نمایش مودال ==========
+// ========== باز کردن PDF با Web Share API (لیست برنامه‌ها) ==========
 function openPDF(bookId) {
   const book = books.find(b => b.id === bookId);
   if (!book) { alert('کتاب پیدا نشد!'); return; }
@@ -335,20 +252,11 @@ function openPDF(bookId) {
     return;
   }
 
-  // ذخیره کتاب برای استفاده در مودال
-  pendingBook = book;
-  
-  // نمایش مودال
-  document.getElementById('appSelectorModal').classList.add('active');
-  document.body.style.overflow = 'hidden';
-}
-
-// ========== باز کردن با اشتراک‌گذاری (بهترین روش) ==========
-function openWithShare(book) {
   try {
-    const blob = getFileUrl(book);
+    const blob = getFileBlob(book);
     const file = new File([blob], `${book.name}.pdf`, { type: 'application/pdf' });
     
+    // ===== استفاده از Web Share API =====
     if (navigator.share && navigator.canShare) {
       navigator.share({
         title: book.name,
@@ -357,98 +265,41 @@ function openWithShare(book) {
         showToast('📤 انتخاب برنامه...');
       }).catch((err) => {
         if (err.name !== 'AbortError') {
-          showToast('⚠️ اشتراک‌گذاری لغو شد.');
+          showToast('⚠️ کاربر انتخاب رو لغو کرد.');
         }
       });
     } else {
-      // اگر Web Share پشتیبانی نشد، دانلود کن
+      // اگر گوشی قدیمی باشه و Web Share پشتیبانی نکنه
       const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${book.name}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const win = window.open('', '_blank');
+      if (win) {
+        win.document.write(`
+          <html><head><title>${book.name}</title>
+          <style>body{margin:0;padding:0;}iframe{width:100%;height:100%;border:none;}</style>
+          </head>
+          <body>
+            <iframe src="${url}"></iframe>
+            <p style="text-align:center;font-family:sans-serif;padding:10px;position:fixed;bottom:0;left:0;right:0;background:rgba(0,0,0,0.7);color:white;margin:0;">
+              <a href="${url}" download="${book.name}.pdf" style="color:white;">📥 دانلود فایل</a>
+            </p>
+          </body></html>
+        `);
+        win.document.close();
+        showToast('🌐 در حال باز کردن...');
+      } else {
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${book.name}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast('📥 فایل دانلود شد!');
+      }
       setTimeout(() => URL.revokeObjectURL(url), 10000);
-      showToast('📥 فایل دانلود شد!');
     }
   } catch(e) {
-    alert('خطا: ' + e.message);
+    alert('خطا در باز کردن فایل: ' + e.message);
   }
-}
-
-// ========== باز کردن در مرورگر ==========
-function openInBrowser(book) {
-  try {
-    const blob = getFileUrl(book);
-    const url = URL.createObjectURL(blob);
-    
-    const win = window.open('', '_blank');
-    if (win) {
-      win.document.write(`
-        <html><head><title>${book.name}</title>
-        <style>
-          body { margin: 0; padding: 0; height: 100vh; overflow: hidden; }
-          iframe { width: 100%; height: 100%; border: none; }
-          .toolbar {
-            position: fixed; bottom: 0; left: 0; right: 0;
-            background: rgba(0,0,0,0.8); color: white;
-            padding: 12px; text-align: center; font-family: sans-serif;
-            display: flex; justify-content: center; gap: 20px;
-            flex-wrap: wrap;
-          }
-          .toolbar a { color: #F5DEB3; text-decoration: none; padding: 6px 18px; background: #6B3A2A; border-radius: 8px; }
-        </style>
-        </head>
-        <body>
-          <iframe src="${url}"></iframe>
-          <div class="toolbar">
-            <span>📖 ${book.name}</span>
-            <a href="${url}" download="${book.name}.pdf">📥 دانلود</a>
-          </div>
-        </body></html>
-      `);
-      win.document.close();
-      showToast('🌐 در حال باز کردن...');
-    } else {
-      // اگر پنجره باز نشد، دانلود کن
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${book.name}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      showToast('📥 فایل دانلود شد!');
-    }
-    setTimeout(() => URL.revokeObjectURL(url), 10000);
-  } catch(e) {
-    alert('خطا: ' + e.message);
-  }
-}
-
-// ========== دانلود فایل ==========
-function downloadFile(book) {
-  try {
-    const blob = getFileUrl(book);
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${book.name}.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    setTimeout(() => URL.revokeObjectURL(url), 10000);
-    showToast('📥 فایل دانلود شد!');
-  } catch(e) {
-    alert('خطا: ' + e.message);
-  }
-}
-
-// ========== بستن مودال ==========
-function closeModal() {
-  document.getElementById('appSelectorModal').classList.remove('active');
-  document.body.style.overflow = 'auto';
-  pendingBook = null;
 }
 
 // ========== Remove & Edit ==========
@@ -552,36 +403,6 @@ document.getElementById('coverInput').addEventListener('change', function(e) {
   };
   reader.readAsDataURL(file);
   this.value = '';
-});
-
-// ========== رویدادهای مودال ==========
-document.getElementById('shareOption').addEventListener('click', function() {
-  if (pendingBook) {
-    openWithShare(pendingBook);
-    closeModal();
-  }
-});
-
-document.getElementById('browserOption').addEventListener('click', function() {
-  if (pendingBook) {
-    openInBrowser(pendingBook);
-    closeModal();
-  }
-});
-
-document.getElementById('downloadOption').addEventListener('click', function() {
-  if (pendingBook) {
-    downloadFile(pendingBook);
-    closeModal();
-  }
-});
-
-document.getElementById('closeSelectorBtn').addEventListener('click', closeModal);
-
-document.getElementById('appSelectorModal').addEventListener('click', function(e) {
-  if (e.target === this) {
-    closeModal();
-  }
 });
 
 // ========== Start ==========

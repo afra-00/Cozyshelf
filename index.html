@@ -16,7 +16,7 @@
     .upload-btn:active { transform: scale(0.95); }
     .book-card { background-color: #F5DEB3; padding: 15px; border-radius: 15px; margin-top: 15px; border-right: 5px solid #6B3A2A; box-shadow: 0 2px 8px rgba(0,0,0,0.1); animation: fadeIn 0.3s ease; display: flex; gap: 15px; align-items: flex-start; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-    .book-cover { width: 80px; height: 110px; border-radius: 10px; object-fit: cover; background: #D2B48C; flex-shrink: 0; border: 2px solid #6B3A2A; display: flex; align-items: center; justify-content: center; font-size: 30px; color: #6B3A2A; overflow: hidden; }
+    .book-cover { width: 80px; height: 110px; border-radius: 10px; background: #D2B48C; flex-shrink: 0; border: 2px solid #6B3A2A; display: flex; align-items: center; justify-content: center; font-size: 30px; color: #6B3A2A; overflow: hidden; }
     .book-cover img { width: 100%; height: 100%; border-radius: 8px; object-fit: cover; }
     .book-details { flex: 1; min-width: 0; }
     .book-info h3 { color: #6B3A2A; font-size: 16px; word-break: break-word; }
@@ -83,9 +83,7 @@
       transform: scale(0.95);
       background: #D2B48C;
     }
-    .app-selector-box .app-option .icon {
-      margin-right: 10px;
-    }
+    .app-selector-box .app-option .icon { margin-right: 10px; }
     .app-selector-box .close-selector {
       display: block;
       width: 100%;
@@ -119,7 +117,6 @@
       text-align: center;
     }
     .toast.show { opacity: 1; }
-    .loading { text-align: center; padding: 40px; color: #6B3A2A; }
   </style>
 </head>
 <body>
@@ -142,25 +139,17 @@
   </div>
 
   <div id="booksList">
-    <p class="loading">📚 در حال بارگذاری...</p>
+    <p class="empty">📚 No books yet :(</p>
   </div>
 </div>
 
 <div class="app-selector-modal" id="appSelectorModal">
   <div class="app-selector-box">
     <h3>📂 انتخاب برنامه برای باز کردن</h3>
-    <button class="app-option" data-app="browser">
-      <span class="icon">🌐</span> مرورگر (کروم/فایرفاکس)
-    </button>
-    <button class="app-option" data-app="reader">
-      <span class="icon">📖</span> PDF Reader (Adobe/MuPDF)
-    </button>
-    <button class="app-option" data-app="download">
-      <span class="icon">📥</span> ذخیره در گوشی (دانلود)
-    </button>
-    <button class="app-option" data-app="share">
-      <span class="icon">📤</span> اشتراک‌گذاری با برنامه‌های دیگر
-    </button>
+    <button class="app-option" data-app="browser"><span class="icon">🌐</span> مرورگر (کروم/فایرفاکس)</button>
+    <button class="app-option" data-app="reader"><span class="icon">📖</span> PDF Reader (Adobe/MuPDF)</button>
+    <button class="app-option" data-app="download"><span class="icon">📥</span> ذخیره در گوشی (دانلود)</button>
+    <button class="app-option" data-app="share"><span class="icon">📤</span> اشتراک‌گذاری با برنامه‌های دیگر</button>
     <button class="close-selector" id="closeSelectorBtn">✕ انصراف</button>
   </div>
 </div>
@@ -168,9 +157,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ============================================================
-//  IndexedDB
-// ============================================================
+// ========== IndexedDB ==========
 const DB_NAME = 'CozyshelfDB';
 const STORE_NAME = 'books';
 let db = null;
@@ -178,56 +165,44 @@ let db = null;
 function openDB() {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, 1);
-    request.onupgradeneeded = (event) => {
-      const db = event.target.result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+    request.onupgradeneeded = (e) => {
+      if (!e.target.result.objectStoreNames.contains(STORE_NAME)) {
+        e.target.result.createObjectStore(STORE_NAME, { keyPath: 'id' });
       }
     };
-    request.onsuccess = (event) => {
-      db = event.target.result;
-      resolve(db);
-    };
-    request.onerror = (event) => reject(event.target.error);
+    request.onsuccess = (e) => { db = e.target.result; resolve(db); };
+    request.onerror = (e) => reject(e.target.error);
   });
 }
 
 function getAllBooks() {
   return new Promise((resolve, reject) => {
     if (!db) { reject('DB not open'); return; }
-    const tx = db.transaction(STORE_NAME, 'readonly');
-    const store = tx.objectStore(STORE_NAME);
-    const request = store.getAll();
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
+    const req = db.transaction(STORE_NAME, 'readonly').objectStore(STORE_NAME).getAll();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
   });
 }
 
 function saveBook(book) {
   return new Promise((resolve, reject) => {
     if (!db) { reject('DB not open'); return; }
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    const store = tx.objectStore(STORE_NAME);
-    const request = store.put(book);
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error);
+    const req = db.transaction(STORE_NAME, 'readwrite').objectStore(STORE_NAME).put(book);
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
   });
 }
 
 function deleteBook(id) {
   return new Promise((resolve, reject) => {
     if (!db) { reject('DB not open'); return; }
-    const tx = db.transaction(STORE_NAME, 'readwrite');
-    const store = tx.objectStore(STORE_NAME);
-    const request = store.delete(id);
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error);
+    const req = db.transaction(STORE_NAME, 'readwrite').objectStore(STORE_NAME).delete(id);
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
   });
 }
 
-// ============================================================
-//  State
-// ============================================================
+// ========== State ==========
 let books = [];
 let currentPage = {};
 let pendingBookId = null;
@@ -247,13 +222,11 @@ function renderBooks() {
     list.innerHTML = '<p class="empty">📚 No books yet :(</p>';
     return;
   }
-  list.innerHTML = books.map(book => {
-    const coverHtml = book.coverData 
-      ? `<img src="${book.coverData}" alt="cover" />` 
-      : '📖';
-    return `
+  list.innerHTML = books.map(book => `
     <div class="book-card" data-id="${book.id}">
-      <div class="book-cover">${coverHtml}</div>
+      <div class="book-cover">
+        ${book.coverData ? `<img src="${book.coverData}" />` : '📖'}
+      </div>
       <div class="book-details">
         <div class="book-info">
           <h3>📖 ${book.name}</h3>
@@ -279,7 +252,7 @@ function renderBooks() {
         </div>
       </div>
     </div>
-  `}).join('');
+  `).join('');
 }
 
 function getProgress(bookId) {
@@ -302,17 +275,12 @@ function updatePage(bookId) {
   }
 }
 
-// ============================================================
-//  Change Cover
-// ============================================================
 function changeCover(bookId) {
   coverInputTarget = bookId;
   document.getElementById('coverInput').click();
 }
 
-// ============================================================
-//  Open PDF
-// ============================================================
+// ========== Open PDF (همون کد خودت) ==========
 function openPDF(bookId) {
   const book = books.find(b => b.id === bookId);
   if (!book) { alert('کتاب پیدا نشد!'); return; }
@@ -359,8 +327,6 @@ function handleAppSelection(appType) {
     alert('خطا: فایل پیدا نشد.');
     return;
   }
-
-  const bookId = pendingBookId;
   pendingBookId = null;
 
   try {
@@ -368,9 +334,7 @@ function handleAppSelection(appType) {
     const mimeString = book.fileData.split(',')[0].split(':')[1].split(';')[0];
     const ab = new ArrayBuffer(byteString.length);
     const ia = new Uint8Array(ab);
-    for (let i = 0; i < byteString.length; i++) {
-      ia[i] = byteString.charCodeAt(i);
-    }
+    for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
     const blob = new Blob([ab], { type: mimeString });
     const url = URL.createObjectURL(blob);
 
@@ -401,7 +365,6 @@ function handleAppSelection(appType) {
           showToast('📥 فایل دانلود شد!');
         }
         break;
-
       case 'reader':
       case 'download':
         const link = document.createElement('a');
@@ -412,20 +375,12 @@ function handleAppSelection(appType) {
         document.body.removeChild(link);
         showToast('📥 فایل دانلود شد!');
         break;
-
       case 'share':
         if (navigator.share && navigator.canShare) {
           const file = new File([blob], `${book.name}.pdf`, { type: 'application/pdf' });
-          navigator.share({
-            title: book.name,
-            files: [file]
-          }).then(() => {
-            showToast('📤 اشتراک‌گذاری انجام شد!');
-          }).catch((err) => {
-            if (err.name !== 'AbortError') {
-              showToast('⚠️ اشتراک‌گذاری لغو شد.');
-            }
-          });
+          navigator.share({ title: book.name, files: [file] })
+            .then(() => showToast('📤 اشتراک‌گذاری انجام شد!'))
+            .catch(() => showToast('⚠️ اشتراک‌گذاری لغو شد.'));
         } else {
           const link2 = document.createElement('a');
           link2.href = url;
@@ -443,9 +398,7 @@ function handleAppSelection(appType) {
   }
 }
 
-// ============================================================
-//  Remove, Edit
-// ============================================================
+// ========== Remove & Edit ==========
 async function removeBook(bookId) {
   if (!confirm('Are you sure you want to remove this book?')) return;
   await deleteBook(bookId);
@@ -458,13 +411,9 @@ async function removeBook(bookId) {
 
 function toggleEdit(bookId) {
   const editDiv = document.getElementById(`edit_${bookId}`);
+  editDiv.style.display = editDiv.style.display === 'flex' ? 'none' : 'flex';
   if (editDiv.style.display === 'flex') {
-    editDiv.style.display = 'none';
-  } else {
-    editDiv.style.display = 'flex';
-    const input = document.getElementById(`edit_input_${bookId}`);
-    input.focus();
-    input.select();
+    document.getElementById(`edit_input_${bookId}`).focus();
   }
 }
 
@@ -481,36 +430,21 @@ async function saveEditName(bookId) {
   }
 }
 
-// ============================================================
-//  رویدادهای آپلود (با روش ساده و مستقیم)
-// ============================================================
-const uploadBtn = document.getElementById('uploadBtn');
-const fileInput = document.getElementById('fileInput');
-const coverInput = document.getElementById('coverInput');
-
-// آپلود PDF
-uploadBtn.onclick = function() {
-  console.log('📁 دکمه کلیک شد!');
-  fileInput.click();
-};
-
-fileInput.onchange = function(e) {
+// ========== Upload events (دقیقاً مثل کد خودت) ==========
+document.getElementById('fileInput').addEventListener('change', function(e) {
   const file = e.target.files[0];
-  console.log('📄 فایل انتخاب شد:', file?.name);
   if (!file) return;
-
   if (file.size > 10 * 1024 * 1024) {
-    alert('⚠️ حجم فایل بیشتر از ۱۰ مگابایت هست!');
+    alert('⚠️ File is too large! Maximum size is 10MB.');
     this.value = '';
     return;
   }
-
   if (file.type === 'application/pdf') {
     const reader = new FileReader();
     reader.onload = async function(event) {
       try {
         const newBook = {
-          id: Date.now().toString() + '_' + Math.random().toString(36).substr(2, 4),
+          id: Date.now().toString(),
           name: file.name.replace('.pdf', '').replace(/\.[^.]+$/, ''),
           totalPages: Math.floor(Math.random() * 300) + 100,
           fileData: event.target.result,
@@ -521,24 +455,25 @@ fileInput.onchange = function(e) {
         await saveBook(newBook);
         localStorage.setItem('cozyshelf_pages', JSON.stringify(currentPage));
         renderBooks();
-        showToast('✅ کتاب آپلود شد! دکمه Read رو بزن.');
+        showToast('✅ Book uploaded! Tap Read to view.');
       } catch(err) {
         alert('Error: ' + err.message);
       }
     };
-    reader.onerror = function() {
-      alert('خطا در خوندن فایل.');
-    };
     reader.readAsDataURL(file);
     this.value = '';
   } else {
-    alert('❌ فقط فایل PDF انتخاب کن!');
+    alert('❌ Please select a PDF file only!');
     this.value = '';
   }
-};
+});
 
-// آپلود جلد
-coverInput.onchange = function(e) {
+document.getElementById('uploadBtn').addEventListener('click', function() {
+  document.getElementById('fileInput').click();
+});
+
+// ========== Cover upload ==========
+document.getElementById('coverInput').addEventListener('change', function(e) {
   const file = e.target.files[0];
   if (!file) return;
   if (!file.type.startsWith('image/')) {
@@ -564,47 +499,40 @@ coverInput.onchange = function(e) {
   };
   reader.readAsDataURL(file);
   this.value = '';
-};
-
-// ============================================================
-//  Modal events
-// ============================================================
-document.querySelectorAll('.app-option').forEach(btn => {
-  btn.onclick = function() {
-    handleAppSelection(this.dataset.app);
-  };
 });
 
-document.getElementById('closeSelectorBtn').onclick = function() {
+// ========== Modal events ==========
+document.querySelectorAll('.app-option').forEach(btn => {
+  btn.addEventListener('click', function() {
+    handleAppSelection(this.dataset.app);
+  });
+});
+
+document.getElementById('closeSelectorBtn').addEventListener('click', function() {
   document.getElementById('appSelectorModal').classList.remove('active');
   document.body.style.overflow = 'auto';
   pendingBookId = null;
-};
+});
 
-document.getElementById('appSelectorModal').onclick = function(e) {
+document.getElementById('appSelectorModal').addEventListener('click', function(e) {
   if (e.target === this) {
     document.getElementById('closeSelectorBtn').click();
   }
-};
+});
 
-// ============================================================
-//  Init
-// ============================================================
-async function init() {
+// ========== Start ==========
+(async function init() {
   try {
     await openDB();
     const pages = localStorage.getItem('cozyshelf_pages');
     if (pages) currentPage = JSON.parse(pages);
     books = await getAllBooks();
     renderBooks();
-    console.log('✅ برنامه راه‌اندازی شد!');
   } catch(e) {
     console.error('Init error:', e);
     document.getElementById('booksList').innerHTML = '<p class="empty">⚠️ خطا در بارگذاری</p>';
   }
-}
-
-init();
+})();
 </script>
 </body>
 </html>

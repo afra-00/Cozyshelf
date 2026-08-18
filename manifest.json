@@ -1,0 +1,24 @@
+{
+  "name": "Cozyshelf",
+  "short_name": "Cozyshelf",
+  "description": "Your cozy digital bookshelf",
+  "start_url": "https://afra-00.github.io/Cozyshelf/",
+  "display": "standalone",
+  "background_color": "#C4A484",
+  "theme_color": "#C4A484",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://afra-00.github.io/Cozyshelf/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://afra-00.github.io/Cozyshelf/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
